@@ -2,7 +2,7 @@ name: douban movie top250 crowller
 run-name: ${{github.actor}} fetch douban movie top250
 on:
   schedule:
-    - cron: "45 8 21 * *"
+    - cron: "15 9 21 * *"
 
 jobs:
   buildAndfetch:
@@ -24,8 +24,7 @@ jobs:
         run: |
           git config --global user.name 'tonysoul'
           git config --global user.email 'tonysoul@foxmail.com'
-          git add data/*
-          git add README.md
+          git add .
           git commit -am "UPDATE"
           git push
       
