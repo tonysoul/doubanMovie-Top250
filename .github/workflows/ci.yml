@@ -2,7 +2,7 @@ name: douban movie top250 crowller
 run-name: ${{github.actor}} fetch douban movie top250
 on:
   schedule:
-    - cron: "58 4 21 * *"
+    - cron: "5 5 21 * *"
 
 jobs:
   buildAndfetch:
@@ -15,7 +15,7 @@ jobs:
         with:
           node-version: 18
       - name: ping 
-        run: ping https://movie.douban.com/top250?start=0&filter=
+        run: ping movie.douban.com
       - name: current date
         run: date
       - name: install
