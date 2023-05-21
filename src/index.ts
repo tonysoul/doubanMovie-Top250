@@ -5,7 +5,7 @@ import { sleep, writeReadMe } from "./utils";
 async function init() {
   // const url = "http://localhost:3000";
   let n = 0;
-  let page = 10;
+  let page = 1;
   let url = `https://movie.douban.com/top250?start=${n}&filter=`;
   const analyzer = new DoubanAnalyze();
   const instance = new Crowller(url, analyzer, {

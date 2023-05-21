@@ -70,7 +70,6 @@ export const writeReadMe = (filePath: string, relativeImgDir: string) => {
       relativeImgDir,
       `${item.alt + item.extname}`
     );
-    console.log(filePath);
 
     return fs.existsSync(filePath);
   });

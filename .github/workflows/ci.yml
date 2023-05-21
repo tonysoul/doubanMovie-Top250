@@ -2,7 +2,7 @@ name: douban movie top250 crowller
 run-name: ${{github.actor}} fetch douban movie top250
 on:
   schedule:
-    - cron: "30 4 21 * *"
+    - cron: "57 4 21 * *"
 
 jobs:
   buildAndfetch:
