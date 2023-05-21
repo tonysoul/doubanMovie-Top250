@@ -1,0 +1,33 @@
+{
+  "name": "douban-top250",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && node dist/index.js",
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "server": "json-server db.json",
+    "test": "ts-node src/test.ts"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "data/*",
+      "db.json"
+    ]
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/superagent": "^4.1.17",
+    "json-server": "^0.17.3",
+    "nodemon": "^2.0.22",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "cheerio": "1.0.0-rc.12",
+    "superagent": "^8.0.9"
+  }
+}

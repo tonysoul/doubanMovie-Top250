@@ -1,0 +1,31 @@
+name: douban movie top250 crowller
+run-name: ${{github.actor}} fetch douban movie top250
+on:
+  schedule:
+    - cron: "30 4 21 * *"
+
+jobs:
+  buildAndfetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{secrets.GIT_DOUBAN}}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: current date
+        run: date
+      - name: install
+        run: npm install
+      - name: start
+        run: npm start
+      - name: commit and push
+        run: |
+          git config --global user.name 'tonysoul'
+          git config --global user.email 'tonysoul@foxmail.com'
+          git add data/*
+          git add README.md
+          git commit -am "UPDATE"
+          git push
+      
