@@ -1,6 +1,6 @@
 import path from "path";
 import fs from "fs";
-import superagent from "superagent";
+import got from "got";
 
 export interface Analyzer {
   analyzer: (filePath: string, html: string) => string;
@@ -54,8 +54,8 @@ export class Crowller {
 
   // 发送http请求，获取原始数据
   private async fetchData() {
-    const result = await superagent.get(this.url);
-    return result.text;
+    const result = await got(this.url);
+    return result.body;
   }
 
   // 写入文件
@@ -70,6 +70,7 @@ export class Crowller {
 
   public async bootstrap() {
     const html = await this.fetchData();
+
     const data = this.analyzer.analyzer(this.dataJsonFile, html);
 
     this.writeFile(data);

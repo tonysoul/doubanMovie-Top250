@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
-import superagent from "superagent";
-import { DataStructure } from "./doubanAnalyze";
+import got from "got";
+import { DataStructure } from "./doubanAnalyze.js";
 
 export interface DownLoadImgItem {
   url: string;
@@ -52,7 +52,13 @@ export const downLoadImg = async (
     if (!fs.existsSync(filePath)) {
       const picStream = fs.createWriteStream(filePath);
 
-      superagent.get(url).pipe(picStream);
+      got
+        .stream(url)
+        .once("error", (err) => {
+          console.log(picStream.path);
+          fs.rmSync(picStream.path);
+        })
+        .pipe(picStream);
 
       console.log(`- downloaded the pic ${title}`);
       await sleep(timeInterval);

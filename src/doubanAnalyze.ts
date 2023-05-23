@@ -1,8 +1,8 @@
 import fs from "fs";
 import path from "path";
 import { load } from "cheerio";
-import { checkFilePathAndMkdir, downLoadImg, replaceSpace } from "./utils";
-import { Analyzer } from "./crowller";
+import { checkFilePathAndMkdir, downLoadImg, replaceSpace } from "./utils.js";
+import { Analyzer } from "./crowller.js";
 
 export interface DataStructure {
   [key: string]: DataItem;
@@ -31,7 +31,9 @@ export class DoubanAnalyze implements Analyzer {
       const $el = $(el);
       const rank = Number($el.find(".item .pic em").text());
       const pic = $el.find(".item .pic img").attr("src") as string;
-      const alt = $el.find(".item .pic img").attr("alt") as string;
+      const alt = replaceSpace(
+        $el.find(".item .pic img").attr("alt") as string
+      );
       const title = replaceSpace($el.find(".item .info .hd > a").text());
       const url = $el.find(".item .info .hd > a").attr("href") as string;
       const star = Number($el.find(".item .info .bd .star .rating_num").text());

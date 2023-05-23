@@ -1,6 +1,6 @@
-import { Crowller } from "./crowller";
-import { DoubanAnalyze } from "./doubanAnalyze";
-import { sleep, writeReadMe } from "./utils";
+import { Crowller } from "./crowller.js";
+import { DoubanAnalyze } from "./doubanAnalyze.js";
+import { sleep, writeReadMe } from "./utils.js";
 
 async function init() {
   // const url = "http://localhost:3000";
