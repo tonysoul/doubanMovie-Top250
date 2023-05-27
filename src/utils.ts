@@ -1,36 +1,8 @@
-import fs from "fs";
-import path from "path";
+import path from "node:path";
+import fs from "node:fs";
+import { pipeline } from "node:stream/promises";
 import got from "got";
-import { DataStructure } from "./doubanAnalyze.js";
-
-export interface DownLoadImgItem {
-  url: string;
-  title: string;
-  extname: string;
-}
-
-export const replaceSpace = (str: string) => {
-  return str.replace(/[\n\s]/gi, "");
-};
-
-/**
- * 检测一个文件路径，它的上级目录是否存在，如果不存在就创建目录
- *
- * @param {string} filePath 文件路径，不是文件夹路径
- */
-export const checkFilePathAndMkdir = (filePath: string) => {
-  // 如果文件不存在
-  if (!fs.existsSync(filePath)) {
-    // 获取它的上级目录
-    const tempDir = path.dirname(filePath);
-
-    // 如果目录不存在就创建
-    if (!fs.existsSync(tempDir)) {
-      // 递归创建，无论目录嵌套多少层
-      fs.mkdirSync(tempDir, { recursive: true });
-    }
-  }
-};
+import { DownLoadImgItem } from "./crowller.js";
 
 export const sleep = (timeout = 2500) => {
   return new Promise((resolve) => {
@@ -38,83 +10,95 @@ export const sleep = (timeout = 2500) => {
   });
 };
 
-export const downLoadImg = async (
-  imgDirPath: string,
-  imgArr: DownLoadImgItem[],
-  timeInterval: number
-) => {
-  // await async 不能用forEach
-  for (let i = 0; i < imgArr.length; i++) {
-    const { url, title, extname } = imgArr[i];
-    const filePath = path.resolve(imgDirPath, `${title + extname}`);
+export const replaceSpace = (str: string) => {
+  return str.replace(/[\s\n]/gi, "");
+};
 
-    checkFilePathAndMkdir(filePath);
-    if (!fs.existsSync(filePath)) {
-      const picStream = fs.createWriteStream(filePath);
+/**
+ * 判断文件是否存在，如果不存在，判断它的父级文件目录是否存在，不存在则创建
+ *
+ * @param {string} filePath 注意：是文件路径，不是文件夹
+ */
+export const checkFilePathAndMkDir = (filePath: string) => {
+  if (!fs.existsSync(filePath)) {
+    const tempDir = path.dirname(filePath);
 
-      got
-        .stream(url)
-        .once("error", (err) => {
-          console.log(picStream.path);
-          fs.rmSync(picStream.path);
-        })
-        .pipe(picStream);
-
-      console.log(`- downloaded the pic ${title}`);
-      await sleep(timeInterval);
+    if (!fs.existsSync(tempDir)) {
+      // 递归创建，无论有多少层文件夹嵌套
+      fs.mkdirSync(tempDir, { recursive: true });
     }
   }
 };
 
-export const writeReadMe = (filePath: string, relativeImgDir: string) => {
-  const data: DataStructure = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+export const downLoadImg = async (
+  imgDir: string,
+  data: DownLoadImgItem[],
+  timeout = 5000
+) => {
+  const failResult = [];
+  for (let i = 0; i < data.length; i++) {
+    const item = data[i];
+    const { pic, alt, extname } = item;
+    const fileName = `${alt}${extname}`;
+    const filePath = path.resolve(process.cwd(), imgDir, fileName);
 
-  // 判断图片是否已经下载到了本地，
-  const hasPic = Object.values(data).every((item) => {
-    const filePath = path.resolve(
-      process.cwd(),
-      relativeImgDir,
-      `${item.alt + item.extname}`
-    );
+    checkFilePathAndMkDir(filePath);
+    if (!fs.existsSync(filePath)) {
+      try {
+        const gotStream = got.stream(pic);
+        const writeImgStream = fs.createWriteStream(filePath);
 
-    return fs.existsSync(filePath);
-  });
+        console.log(`- downLoad pic ${fileName}`);
 
-  const dataSource = Object.values(data).map((item) => {
-    const { rank, alt, pic, url, extname } = item;
-    return { rank, alt, pic, extname, url };
-  });
+        await pipeline(gotStream, writeImgStream);
+        await sleep(timeout);
+      } catch (error) {
+        failResult.push(item);
 
-  writeMD(dataSource, relativeImgDir, hasPic);
+        if (fs.existsSync(filePath)) {
+          fs.rmSync(filePath);
+        }
+      }
+    }
+  }
+
+  if (failResult.length) {
+    console.log("img downLoad fail:", failResult);
+  }
 };
 
-function writeMD(dataArr: any[], relativeImgDir: string, hasPic: boolean) {
-  const readMePath = path.resolve(process.cwd(), "README.md");
-  let fileContent = ``;
-  let title = `# doubanMovie Top250`;
+export const writeReadMeFile = (
+  sourceDataFile: string,
+  relativeDestImgDir: string
+) => {
+  const fileName = "README.md";
+  const jsonObj = JSON.parse(fs.readFileSync(sourceDataFile, "utf-8"));
+
+  let content = ``;
+  let head = `## doubanMovie-Top250`;
   let table = `
-|   |   |   |   |   |
+|---|---|---|---|---|
 |:-:|:-:|:-:|:-:|:-:|
 @table
 `;
 
+  const arr: any[] = Object.values(jsonObj);
   let tableStr = "";
-  for (let i = 0; i < dataArr.length; i++) {
-    const item = dataArr[i];
-    tableStr += "|";
-    if (hasPic) {
-      tableStr += `![](${relativeImgDir + item.alt + item.extname})`;
-    }
-    tableStr += `[${item.rank} ${item.alt}](${item.url})`;
+  for (let i = 0; i < arr.length; i++) {
+    const { rank, extname, alt, url } = arr[i];
+    tableStr += `|![](${path.join(
+      relativeDestImgDir,
+      alt + extname
+    )}) [${rank} - ${alt}](${url})`;
 
     if (i % 5 === 4 && i !== 0) {
       tableStr += "|\n";
     }
   }
 
-  fileContent += title;
+  content += head;
   table = table.replace("@table", tableStr);
-  fileContent += table;
+  content += table;
 
-  fs.writeFileSync(readMePath, fileContent);
-}
+  fs.writeFileSync(fileName, content);
+};

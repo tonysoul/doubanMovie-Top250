@@ -1,43 +1,32 @@
 import { Crowller } from "./crowller.js";
-import { DoubanAnalyze } from "./doubanAnalyze.js";
-import { sleep, writeReadMe } from "./utils.js";
+import { DoubanAnalyzer } from "./doubanAnalyzer.js";
+import { sleep, writeReadMeFile } from "./utils.js";
 
 async function init() {
   // const url = "http://localhost:3000";
   let n = 0;
   let page = 10;
   let url = `https://movie.douban.com/top250?start=${n}&filter=`;
-  const analyzer = new DoubanAnalyze();
+  const analyzer = new DoubanAnalyzer();
   const instance = new Crowller(url, analyzer, {
     destDir: "data/doubanTop250",
-    downLoadPic: true,
+    downLoadImg: true,
   });
 
-  async function run() {
-    console.log("============== start download ==============");
+  console.log("========== start bootstrap ========== \n");
+  for (let i = 0; i < page; i++) {
+    n = i * 25;
+    url = `https://movie.douban.com/top250?start=${n}&filter=`;
+    instance.setUrl = url;
 
-    for (let i = 0; i < page; i++) {
-      n = i * 25;
-      url = `https://movie.douban.com/top250?start=${n}&filter=`;
+    console.log(`start download ${url}`);
 
-      instance.setUrl = url;
-      console.log("\n");
-      console.log(`----------- start download page ${i + 1} ----------------`);
-      console.log(url);
-
-      await instance.bootstrap();
-      await sleep(5000);
-      console.log(`----------- end download page ${i + 1} -----------`);
-    }
-
-    console.log("\n");
-    console.log("============== end download ==============");
+    await instance.bootstrap();
+    await sleep(5000);
+    console.log("bootstrap end \n");
   }
 
-  await run();
-
-  // 写入README.md文件
-  writeReadMe(instance.dataJsonFile, "data/doubanTop250/imgs/");
+  writeReadMeFile(instance.sourceDataFile, "data/doubanTop250/imgs/");
 }
 
 init();
